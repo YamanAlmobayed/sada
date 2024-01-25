@@ -15,16 +15,12 @@ from django.db import IntegrityError
 from rest_framework.permissions import IsAuthenticated
 import requests
 import json
-from .. import autism_children as autism_children_model
-from .. import autism_toddler as autism_toddler_model
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import numpy as np
 import joblib
 from django.core.exceptions import ObjectDoesNotExist
 from random import randrange
-from random import choice
-from ..depression_detection import class_prediction
 import os
 
 
@@ -639,23 +635,6 @@ class EventView(viewsets.ModelViewSet):
             return Response({"message":"Event deleted successfully"}, status= status.HTTP_200_OK)
         except:
                 return Response({"error":"An error occurred while deleting the event, please try again"}, status.HTTP_400_BAD_REQUEST)
-
-
-class AutismQustionView(viewsets.ReadOnlyModelViewSet):
-    serializer_class = serializers.AutismSerializer
-    def get_queryset(self):
-
-        age = self.request.query_params['age']
-        age = datetime.strptime(age, '%Y-%m-%d')
-        year= relativedelta(datetime.now(),age ).years*12
-        month= relativedelta(datetime.now(), age).months
-        x=year+month
-        if x in range(48,132):
-            return models.AutismQuestion.objects.filter(age='children')
-        elif x in range(12,36):
-            return models.AutismQuestion.objects.filter(age='toddler')
-        else:
-            return models.AutismQuestion.objects.filter(age='none')
     
 
 def google_search(query, api_key, cse_id):
@@ -677,19 +656,6 @@ def search_engine(request):
     for result in results["items"]:
         final_result.append({'result' : { 'title': result["title"], 'link': result["link"], 'snippet': result["snippet"]}})
     return Response(final_result)
-
-@api_view(['POST'])
-def autism_children(request):
-    child_answers = request.POST.getlist('child_answers')
-    autism_diagnose=autism_children_model.children_lr_predict(child_answers)
-    return Response({'autism_diagnsoe':autism_diagnose})
-
-
-@api_view(['POST'])
-def autism_toddler(request):
-    child_answers = request.POST.getlist('child_answers')
-    autism_diagnose=autism_toddler_model.toddlers_svm_predict(child_answers)
-    return Response({'autism_diagnsoe':autism_diagnose})
 
 
 @api_view(['PUT'])
@@ -719,69 +685,12 @@ def update_chid_info(request):
     child.mother_work=data['mother_work']
     child.save()
     return Response({'message':'updated Successfully'})
-    
-
-class DyslexiaView(APIView):
-    def get(self, request):
-        questions = models.DyslexiaQuestion.objects.all()
-        serialized_questions = serializers.DyslexiaQuestionSerializer(questions, many=True,).data    
-        return Response(serialized_questions, status=status.HTTP_200_OK)
-    def post(self, request):
-        language_vocab = int(request.POST.get('language_vocab'))
-        s = 2
-        memory = int(request.POST.get('memory'))
-        speed = int(request.POST.get('speed')) 
-        visual_discrimination = int(request.POST.get('visual_discrimination')) 
-        audio_dicrimination = int(request.POST.get('audio_dicrimination'))
-        language_vocab_result = (language_vocab/28)
-        memory_result = (memory/8)
-        visual_discrimination_result = (visual_discrimination/16)
-        audio_dicrimination_result = (audio_dicrimination/8)
-        if speed <= 60:  
-            speed_result = 20
-        elif speed in range(61,121):
-            speed_result = 16
-        elif speed in range(121,181):
-            speed_result = 12
-        elif speed in range(181,241):
-            speed_result = 8
-        elif speed > 240:
-            speed_result = 4
-        quiz_score = ((language_vocab_result + memory_result + visual_discrimination_result + audio_dicrimination_result + speed_result)/80)
-        results_array = np.array([[language_vocab_result, memory_result, speed_result, visual_discrimination_result, audio_dicrimination_result, quiz_score]])
-        model = joblib.load('first_app\\api\\dyslexia_final_model.sav')
-        label = int(model.predict(results_array))
-        if(label == 0):
-            final_result = "There is a high chance that the child have dyslexia."
-        elif(label == 1):
-            final_result = "There is a moderate chance of the child have dyslexia."
-        else:
-            final_result = "There is a low chance of the child have dyslexia."
-        return Response({'result': final_result})
 
 
 class RavnTestView(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.RavnGroupSerializer
     permission_classes = [permissions.IsParentOrExpert, IsAuthenticated]
     queryset = models.RavnGroup.objects.all()
-
-
-@api_view(['POST',])
-def depression_detection_view(request):
-    try:
-        record = request.FILES['record']
-        name,exten=os.path.splitext(str(record))
-
-        if exten=='.wav':
-            with open('mediafiles/records/' + record.name, 'wb') as f:
-                for chunk in record.chunks():
-                    f.write(chunk)
-                    result = class_prediction(f.name)
-                    return Response({"result":result})
-        else:
-            return Response({"error":'invalid extention'})
-    except:
-        return Response({"error":'please enter a voice file'})
     
      
 

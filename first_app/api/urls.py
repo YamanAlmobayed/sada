@@ -9,8 +9,6 @@ router = DefaultRouter()
 router.register('wechsler_qustions', views.WechslerTestView, basename='wechsler_qustions')#
 router.register('wechsler_get', views.WechslerChildGet, basename='wechsler_get')
 
-router.register('autism_question', views.AutismQustionView, basename='AutismQustionView')#  
-
 router.register('portage_childs_tests', views.PortageChildTestView, basename = 'portage_childs_tests')#
 
 router.register('child_info_questions', views.ChildInfoQustionsView, basename='child_info_questions')#
@@ -52,10 +50,6 @@ urlpatterns=[
      path('add_exciting_parent_to_child/', views.add_exciting_parent_view, name = 'add_exciting_parent_to_child'),#
      
      path('search_engine/', views.search_engine, name = 'search_engine'),#
-     path('children_autism/', views.autism_children, name = 'children_autism'),
-     path('toddler_autism/', views.autism_toddler, name = 'autism_toddler'),
      path('update_child/', views.update_chid_info, name = 'update_chid_info'),
-     path('dyslexia/', views.DyslexiaView.as_view(), name = 'dyslexia'),
      path('add_wechsler/', views.AddWechslerChild, name = 'add_wechsler'),
-     path('depression/', views.depression_detection_view),
 ]

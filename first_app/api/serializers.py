@@ -359,51 +359,11 @@ class EventSerializers(serializers.ModelSerializer):
             model= models.Event
             fields= ('__all__')
 
-
-class AutismSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.AutismQuestion
-        exclude = []
-        depth=1
-
   
 def get_full_url(path):
     """Get full url with respect to current scheme"""
     url = 'https://127.0.0.1:8000' + str(path)
     return url        
-        
-class DyslexiaQuestionAnswersSerializer(serializers.ModelSerializer):
-        class Meta:
-            model= models.DyslexiaQuestionAnswers
-            exclude = ['question']
-            
-
-class DyslexiaQuestionImagesSerializer(serializers.ModelSerializer):
-        image = serializers.SerializerMethodField()
-        
-        def get_image(self, instance):
-            return get_full_url(instance.image.url)   
-        
-        class Meta:
-            model= models.DyslexiaQuestionImages
-            exclude = ['question']
-            
-            
-class DyslexiaQuestionSerializer(serializers.ModelSerializer):
-        dyslexia_answers = DyslexiaQuestionAnswersSerializer(many=True, read_only=True)
-        dyslexia_images = DyslexiaQuestionImagesSerializer(many=True, read_only=True)
-        record = serializers.SerializerMethodField()
-        
-        def get_record(self, instance):
-            try:
-                return get_full_url(instance.record.url) 
-            except:
-                return None
-            
-        class Meta:
-            model= models.DyslexiaQuestion
-            fields = ('__all__')
-            
             
 class RavnQuestionSerializer(serializers.ModelSerializer):
     answers = serializers.SerializerMethodField()
